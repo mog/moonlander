@@ -60,6 +60,9 @@ public class Moonlander {
 
     private static Logger logger = Logger.getLogger("moonlander.library");
 
+    public static Minim minim;
+    public static AudioPlayer song;
+
     /**
      * Initializes library and tries to load syncdata.
      *
@@ -87,8 +90,8 @@ public class Moonlander {
      * with given soundtrack file (uses MinimController).
      */
     public static Moonlander initWithSoundtrack(PApplet applet, String filename, int beatsPerMinute, int rowsPerBeat) {
-        Minim minim = new Minim(applet);
-        AudioPlayer song = minim.loadFile(filename, 1024);
+        minim = new Minim(applet);
+        song = minim.loadFile(filename, 1024);
 
         return new Moonlander(applet, new MinimController(song, beatsPerMinute, rowsPerBeat));
     }
