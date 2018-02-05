@@ -22,23 +22,28 @@ class SocketConnector extends Connector {
     private DataOutputStream out;
     private DataInputStream in;
 
+    private Moonlander moonlanderMain;
+
     private final String CLIENT_GREET = "hello, synctracker!";
     private final String SERVER_GREET = "hello, demo!";
 
     private static class Commands {
-        static final int SET_KEY        = 0;
-        static final int DELETE_KEY     = 1;
-        static final int GET_TRACK      = 2;
-        static final int SET_ROW        = 3;
-        static final int PAUSE          = 4;
-        static final int SAVE_TRACKS    = 5;
+        static final int SET_KEY     = 0;
+        static final int DELETE_KEY  = 1;
+        static final int GET_TRACK   = 2;
+        static final int SET_ROW     = 3;
+        static final int PAUSE       = 4;
+        static final int SAVE_TRACKS = 5;
+        static final int ACTION      = 6;
     }
 
     /*
      * Connects to GNU Rocket.
      */
-    public SocketConnector(Logger logger, TrackContainer tracks, Controller controller, String host, int port) throws Exception {
+    public SocketConnector(Logger logger, TrackContainer tracks, Controller controller, String host, int port, Moonlander moonlanderMain) throws Exception {
         super(logger, tracks, controller);
+
+        this.moonlanderMain = moonlanderMain;
 
         logger.fine(String.format("Trying to connect to Rocket at %s:%d", host, port));
 
@@ -195,6 +200,14 @@ class SocketConnector extends Connector {
         logger.finest("Handling SAVE_TRACKS");
 
     }
+
+    public void handleCommandAction() throws IOException {
+        logger.finer("Handling Action");
+
+        int actionId = in.readInt(); 
+        moonlanderMain.onAction(actionId);
+    }
+
     /**
      * Reads pending rocket commands from socket.
      *
@@ -225,6 +238,9 @@ class SocketConnector extends Connector {
                     break;
                 case Commands.SAVE_TRACKS:
                     handleCommandSaveTracks();
+                    break;
+                case Commands.ACTION:
+                    handleCommandAction();
                     break;
                 default:
                     logger.warning(String.format("Unknown command id=%d", cid));

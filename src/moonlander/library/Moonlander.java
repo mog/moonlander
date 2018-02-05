@@ -35,6 +35,7 @@ import java.util.logging.*;
 import processing.core.*;
 import ddf.minim.*;
 
+import java.lang.reflect.*;
 
 /**
  * Moonlander
@@ -49,6 +50,8 @@ public class Moonlander {
     public final static String VERSION = "##library.prettyVersion##";
 
     PApplet parent;
+
+    Method onRocketActionEventMethod;
 
     // Main collection of all tracks
     private TrackContainer tracks;
@@ -83,6 +86,12 @@ public class Moonlander {
         tracks = new TrackContainer();
         this.parent = parent;
         this.controller = controller;
+
+        try {
+            onRocketActionEventMethod = this.parent.getClass().getDeclaredMethod("onRocketAction", int.class);
+        } catch (Exception e) {
+            logger.info("did not find onRocketAction(int actionId) in sketch");
+        }
     }
 
     /**
@@ -94,6 +103,18 @@ public class Moonlander {
         song = minim.loadFile(filename, 1024);
 
         return new Moonlander(applet, new MinimController(song, beatsPerMinute, rowsPerBeat));
+    }
+
+    // then later, to fire that event
+    public void onAction(int actionId) {
+        if (onRocketActionEventMethod != null) {
+            try {
+                onRocketActionEventMethod.invoke(this.parent, new Object[] { actionId });
+            } catch (Exception e) {
+                logger.info("Disabling onRocketAction() for because of an error.");
+                onRocketActionEventMethod = null;
+            }
+        }
     }
 
     private void setupLogging(Level logLevel) {
@@ -125,7 +146,7 @@ public class Moonlander {
 
         // If connection to rocket fails, try to load syncdata from file
         try {
-            connector = new SocketConnector(logger, tracks, controller, host, port);
+            connector = new SocketConnector(logger, tracks, controller, host, port, this);
         } catch (Exception e) {
             try {
                 connector = new ProjectFileConnector(logger, tracks, controller, parent.sketchPath(filePath));
