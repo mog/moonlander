@@ -11,6 +11,18 @@ public class MinimController extends Controller {
         this.player = player;
     }
 
+    public AudioPlayer getPlayer(){
+        return player;
+    }
+
+    public void setCurrentRow(double row, boolean silent) {
+        super.setCurrentRow(row, silent);
+        // allow to change the row at runtime, so looping through Rocket works
+        if(silent && isPlaying()){
+            player.cue((int)(getCurrentRow() * 1000.0 / rowsPerSecond));
+        }
+    }
+
     public void update() {
         if (isPlaying())
             setCurrentRow((player.position() / 1000.0) * rowsPerSecond, false);
